@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>이지스터300 고정댐퍼 풀시티 타이머</title>
+    <style>
+        body { font-family: sans-serif; background-color: #121212; color: #ffffff; text-align: center; padding: 20px; margin: 0; }
+        .wrapper { max-width: 480px; margin: 20px auto; background: #1e1e1e; padding: 30px; border-radius: 20px; box-shadow: 0 6px 20px rgba(0,0,0,0.7); border: 1px solid #333; }
+        h1 { color: #ff9f43; font-size: 22px; margin-top: 0; }
+        .damper-alert { background: #ff9f43; color: #121212; font-weight: bold; padding: 8px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; }
+        .timer-display { font-size: 56px; font-weight: bold; margin: 20px 0; color: #f1c40f; font-family: monospace; }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .info-card { background: #2d2d2d; padding: 15px; border-radius: 12px; }
+        .info-card label { display: block; font-size: 12px; color: #aaa; margin-bottom: 5px; }
+        .info-card span { font-size: 24px; font-weight: bold; }
+        .instruction-box { background: #252830; padding: 15px; border-radius: 12px; border-left: 5px solid #10ac84; min-height: 50px; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: bold; color: #10ac84; line-height: 1.5; }
+        .btn { border: none; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 30px; cursor: pointer; color: #fff; width: 100%; margin-top: 25px; background: #ff9f43; }
+    </style>
+</head>
+<body>
+<div class="wrapper">
+    <h1>🔥 Easyster 300 고정 댐퍼 풀시티</h1>
+    <div class="damper-alert">⚠️ 댐퍼를 [2.5단 (50%)]에 고정하고 절대 손대지 마세요!</div>
+    <div class="timer-display" id="timeShow">00:00</div>
+    <div class="info-grid">
+        <div class="info-card">
+            <label>예상 품온</label>
+            <span id="tempShow" style="color: #ee5253;">185°C</span>
+        </div>
+        <div class="info-card">
+            <label>목표 화력 (미세압)</label>
+            <span id="fireShow" style="color: #54a0ff;">0.0</span>
+        </div>
+    </div>
+    <div class="instruction-box" id="msgShow">생두를 투입할 준비를 해주세요.</div>
+    <button class="btn" onclick="goRoast()">로스팅 시작 (투입)</button>
+</div>
+<script>
+    let timer, currentSec = 0, running = false;
+    function talk(text) {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            const msg = new SpeechSynthesisUtterance(text);
+            msg.lang = 'ko-KR';
+            window.speechSynthesis.speak(msg);
+        }
+    }
+    const steps = [
+        { sec: 0, temp: 185, fire: "1.6", txt: "[투입 완] 화력을 1.6으로 강하게 올려줍니다.", talk: "생두 투입 완료. 화력을 일 점 육으로 올리세요." },
+        { sec: 60, temp: 85, fire: "1.6", txt: "[터닝 포인트] 통과. 화력 1.6을 그대로 유지합니다.", talk: "터닝 포인트 통과. 화력 일 점 육 유지." },
+        { sec: 300, temp: 150, fire: "1.1", txt: "[옐로우 단계] 화력을 1.1로 낮춥니다.", talk: "옐로우 단계 진입. 화력을 일 점 일로 낮추세요." },
+        { sec: 450, temp: 185, fire: "0.5", txt: "[1차 크랙 임박] 화력을 0.5로 과감하게 줄여줍니다.", talk: "일차 크랙 임박. 화력을 영 점 오로 낮추세요." },
+        { sec: 540, temp: 198, fire: "0.3", txt: "[휴지기 구간] 화력을 0.3으로 미세하게 조절합니다.", talk: "휴지기 진입. 화력을 영 점 삼으로 미세 조절 하세요." },
+        { sec: 630, temp: 213, fire: "0.0", txt: "⚠️ [2차 크랙 발생] 탁탁 소리가 연속으로 나면 즉시 배출!", talk: "이차 크랙 시작. 소리를 확인하고 즉시 원두를 배출하세요." }
+    ];
+    function goRoast() {
+        if (running) return; running = true; currentSec = 0; triggerStep(0);
+        timer = setInterval(() => { currentSec++; clockUpdate(); triggerStep(currentSec); }, 1000);
+    }
+    function clockUpdate() {
+        let m = Math.floor(currentSec / 60), s = currentSec % 60;
+        document.getElementById("timeShow").innerText = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+        let active = steps.filter(x => x.sec <= currentSec).pop();
+        if(active) { document.getElementById("tempShow").innerText = active.temp + "°C"; document.getElementById("fireShow").innerText = active.fire; }
+    }
+    function triggerStep(s) {
+        const match = steps.find(x => x.sec === s);
+        if (match) { document.getElementById("msgShow").innerText = match.txt; talk(match.talk); }
+    }
+</script>
+</body>
+</html>
