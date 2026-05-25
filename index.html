@@ -2,71 +2,228 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>이지스터300 고정댐퍼 풀시티 타이머</title>
+    <title>이지스터300 통합 로스팅 가이드</title>
     <style>
-        body { font-family: sans-serif; background-color: #121212; color: #ffffff; text-align: center; padding: 20px; margin: 0; }
-        .wrapper { max-width: 480px; margin: 20px auto; background: #1e1e1e; padding: 30px; border-radius: 20px; box-shadow: 0 6px 20px rgba(0,0,0,0.7); border: 1px solid #333; }
-        h1 { color: #ff9f43; font-size: 22px; margin-top: 0; }
-        .damper-alert { background: #ff9f43; color: #121212; font-weight: bold; padding: 8px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; }
-        .timer-display { font-size: 56px; font-weight: bold; margin: 20px 0; color: #f1c40f; font-family: monospace; }
-        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
-        .info-card { background: #2d2d2d; padding: 15px; border-radius: 12px; }
+        body { font-family: sans-serif; background-color: #121212; color: #ffffff; text-align: center; padding: 15px; margin: 0; }
+        .wrapper { max-width: 500px; margin: 10px auto; background: #1e1e1e; padding: 25px; border-radius: 20px; box-shadow: 0 6px 20px rgba(0,0,0,0.7); border: 1px solid #333; }
+        h1 { color: #ff9f43; font-size: 22px; margin: 0 0 10px 0; }
+        .damper-alert { background: #ff9f43; color: #121212; font-weight: bold; padding: 8px; border-radius: 8px; margin-bottom: 15px; font-size: 13px; }
+        
+        /* 생두 선택 버튼 스타일 */
+        .bean-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .bean-btn { background: #333; color: #fff; border: 2px solid #555; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 14px; }
+        .bean-btn.active { background: #ee5253; border-color: #ee5253; color: white; }
+        
+        .timer-display { font-size: 50px; font-weight: bold; margin: 10px 0; color: #f1c40f; font-family: monospace; }
+        .speed-badge { display: inline-block; background: #5f27cd; color: #fff; padding: 3px 8px; border-radius: 5px; font-size: 12px; font-weight: bold; vertical-align: middle; margin-left: 5px; }
+        
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+        .info-card { background: #2d2d2d; padding: 12px; border-radius: 12px; }
         .info-card label { display: block; font-size: 12px; color: #aaa; margin-bottom: 5px; }
-        .info-card span { font-size: 24px; font-weight: bold; }
-        .instruction-box { background: #252830; padding: 15px; border-radius: 12px; border-left: 5px solid #10ac84; min-height: 50px; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: bold; color: #10ac84; line-height: 1.5; }
-        .btn { border: none; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 30px; cursor: pointer; color: #fff; width: 100%; margin-top: 25px; background: #ff9f43; }
+        .info-card span { font-size: 22px; font-weight: bold; }
+        
+        .instruction-box { background: #252830; padding: 15px; border-radius: 12px; border-left: 5px solid #10ac84; min-height: 45px; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: bold; color: #10ac84; line-height: 1.4; margin-bottom: 15px; }
+        
+        /* 제어 버튼 */
+        .control-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .btn { border: none; padding: 12px; font-size: 14px; font-weight: bold; border-radius: 25px; cursor: pointer; color: #fff; }
+        .btn-start { background: #10ac84; }
+        .btn-speed { background: #5f27cd; }
+        .btn-reset { background: #576574; }
+        
+        /* 전체 스텝 타임라인 표시 */
+        .timeline-box { text-align: left; background: #222; padding: 15px; border-radius: 12px; border: 1px solid #444; }
+        .timeline-box h3 { font-size: 14px; margin: 0 0 10px 0; color: #ff9f43; border-bottom: 1px solid #444; padding-bottom: 5px; }
+        .step-item { font-size: 12px; line-height: 1.6; color: #aaa; padding: 3px 0; }
+        .step-item.current { color: #f1c40f; font-weight: bold; background: rgba(241, 196, 15, 0.1); border-radius: 3px; padding-left: 5px; }
     </style>
 </head>
 <body>
+
 <div class="wrapper">
-    <h1>🔥 Easyster 300 고정 댐퍼 풀시티</h1>
-    <div class="damper-alert">⚠️ 댐퍼를 [2.5단 (50%)]에 고정하고 절대 손대지 마세요!</div>
-    <div class="timer-display" id="timeShow">00:00</div>
+    <h1>🔥 Easyster 300 멀티 프로파일</h1>
+    <div class="damper-alert">⚠️ [공통] 댐퍼는 2.5단(50%) 고정 후 절대 조절 금지!</div>
+    
+    <div class="bean-selector">
+        <button class="bean-btn active" id="btn-colombia" onclick="selectBean('colombia')">🇨🇴 콜롬비아 (밀도고)</button>
+        <button class="bean-btn" id="btn-brazil" onclick="selectBean('brazil')">🇧🇷 브라질 (밀도저)</button>
+        <button class="bean-btn" id="btn-indodia" onclick="selectBean('indodia')">🇮🇳 인도 (로부스타)</button>
+        <button class="bean-btn" id="btn-vietnam" onclick="selectBean('vietnam')">🇻🇳 베트남 (로부스타)</button>
+    </div>
+    
+    <div class="timer-display"><span id="timeShow">00:00</span><span id="speedShow" class="speed-badge" style="display:none;">10X 배속</span></div>
+    
     <div class="info-grid">
         <div class="info-card">
-            <label>예상 품온</label>
-            <span id="tempShow" style="color: #ee5253;">185°C</span>
+            <label>추천 투입온도 / 현재상태</label>
+            <span id="tempShow" style="color: #ee5253;">190°C</span>
         </div>
         <div class="info-card">
             <label>목표 화력 (미세압)</label>
             <span id="fireShow" style="color: #54a0ff;">0.0</span>
         </div>
     </div>
-    <div class="instruction-box" id="msgShow">생두를 투입할 준비를 해주세요.</div>
-    <button class="btn" onclick="goRoast()">로스팅 시작 (투입)</button>
+    
+    <div class="instruction-box" id="msgShow">생두를 선택하고 투입 준비를 해주세요.</div>
+    
+    <div class="control-grid">
+        <button class="btn btn-start" id="startBtn" onclick="goRoast()">로스팅 시작</button>
+        <button class="btn btn-speed" onclick="toggleSpeed()">10배속 토글</button>
+        <button class="btn btn-reset" onclick="stopRoast()">리셋</button>
+    </div>
+    
+    <div class="timeline-box">
+        <h3>📋 현재 원두 전체 진행 스텝</h3>
+        <div id="timelineContent"></div>
+    </div>
 </div>
+
 <script>
-    let timer, currentSec = 0, running = false;
+    let timer, currentSec = 0, running = false, isFast = false, currentBean = 'colombia';
+
+    // 4대 생두 맞춤 데이터 베이스
+    const profiles = {
+        colombia: {
+            initTemp: "190°C",
+            steps: [
+                { sec: 0, temp: 190, fire: "1.7", txt: "[투입] 화력 1.7 강하게 밀어줍니다.", talk: "콜롬비아 투입 완료. 화력을 일 점 칠로 올리세요." },
+                { sec: 60, temp: 85, fire: "1.7", txt: "[터닝포인트] 화력 1.7 유지하여 조직을 엽니다.", talk: "터닝 포인트 통과. 화력 일 점 칠 유지." },
+                { sec: 300, temp: 150, fire: "1.2", txt: "[옐로우 단계] 고소한 빵 냄새. 화력 1.2로 미세 감소.", talk: "옐로우 단계 진입. 화력을 일 점 이로 낮추세요." },
+                { sec: 450, temp: 188, fire: "0.6", txt: "[1차 크랙 시작] 화력 0.6으로 줄여 급상승 제어.", talk: "일차 크랙 시작. 화력을 영 점 육으로 낮추세요." },
+                { sec: 540, temp: 200, fire: "0.3", txt: "[휴지기 구간] 화력 0.3으로 2차 크랙을 유도합니다.", talk: "휴지기 진입. 화력을 영 점 삼으로 조절하세요." },
+                { sec: 630, temp: 214, fire: "0.0", txt: "⚠️ [2차 크랙 배출] 탁탁 소리 3방 이상 즉시 배출!", talk: "이차 크랙 시작. 확인 후 즉시 원두를 배출하세요." }
+            ]
+        },
+        brazil: {
+            initTemp: "183°C",
+            steps: [
+                { sec: 0, temp: 183, fire: "1.4", txt: "[투입] 열에 약하므로 화력 1.4로 시작합니다.", talk: "브라질 투입 완료. 화력을 일 점 사로 설정하세요." },
+                { sec: 60, temp: 80, fire: "1.4", txt: "[터닝포인트] 과열 방지를 위해 화력 1.4 유지.", talk: "터닝 포인트 통과. 화력 일 점 사 유지." },
+                { sec: 280, temp: 145, fire: "1.0", txt: "[옐로우 단계] 노란 변색 시작. 화력 1.0으로 감소.", talk: "옐로우 단계 진입. 화력을 일 점 영으로 낮추세요." },
+                { sec: 420, temp: 185, fire: "0.5", txt: "[1차 크랙 시작] 타기 쉬우므로 화력 0.5로 대폭 감소.", talk: "일차 크랙 시작. 화력을 영 점 오로 낮추세요." },
+                { sec: 510, temp: 196, fire: "0.4", txt: "[휴지기 구간] 화력 0.4 유지하며 2차 크랙 대기.", talk: "휴지기 진입. 화력 영 점 사 유지." },
+                { sec: 580, temp: 211, fire: "0.0", txt: "⚠️ [2차 크랙 배출] 첫 탁 소리가 들리자마자 바로 배출!", talk: "이차 크랙 시작되었습니다. 즉시 원두를 배출하세요." }
+            ]
+        },
+        indodia: {
+            initTemp: "185°C",
+            steps: [
+                { sec: 0, temp: 185, fire: "1.6", txt: "[투입] 로부스타 바디감을 위해 화력 1.6 시작.", talk: "인도 로부스타 투입 완료. 화력 일 점 육 설정." },
+                { sec: 60, temp: 83, fire: "1.6", txt: "[터닝포인트] 조직 특성을 위해 화력 1.6 유지.", talk: "터닝 포인트 통과. 화력 일 점 육 유지." },
+                { sec: 300, temp: 148, fire: "1.1", txt: "[옐로우 단계] 특유의 향 발현. 화력 1.1로 조절.", talk: "옐로우 단계 진입. 화력을 일 점 일로 낮추세요." },
+                { sec: 460, temp: 186, fire: "0.4", txt: "[1차 크랙] 쓴맛 제어를 위해 화력 0.4로 다운.", talk: "일차 크랙 시작. 화력을 영 점 사로 낮추세요." },
+                { sec: 560, temp: 198, fire: "0.3", txt: "[휴지기 연장] 0.3으로 매캐한 향을 길게 날려줍니다.", talk: "휴지기 진입. 화력 영 점 삼으로 길게 끌어줍니다." },
+                { sec: 660, temp: 214, fire: "0.0", txt: "⚠️ [2차 크랙 배출] 2차 크랙이 본격화될 때 소화 배출!", talk: "이차 크랙 본격화. 확인 후 즉시 원두를 배출하세요." }
+            ]
+        },
+        vietnam: {
+            initTemp: "188°C",
+            steps: [
+                { sec: 0, temp: 188, fire: "1.6", txt: "[투입] 강한 쓴맛을 단맛으로 바꾸기 위해 1.6 투입.", talk: "베트남 로부스타 투입 완료. 화력 일 점 육 설정." },
+                { sec: 60, temp: 85, fire: "1.6", txt: "[터닝포인트] 조직 중심부까지 수분 건조 화력 1.6 유지.", talk: "터닝 포인트 통과. 화력 일 점 육 유지." },
+                { sec: 310, temp: 150, fire: "1.1", txt: "[옐로우 단계] 구수한 향 발현. 화력 1.1로 조절.", talk: "옐로우 단계 진입. 화력을 일 점 일로 낮추세요." },
+                { sec: 470, temp: 187, fire: "0.4", txt: "[1차 크랙] 결점 향 배출을 위해 화력 0.4로 감소.", talk: "일차 크랙 시작. 화력을 영 점 사로 낮추세요." },
+                { sec: 580, temp: 199, fire: "0.3", txt: "[휴지기 극대화] 0.3으로 카카오 단맛을 응축시킵니다.", talk: "휴지기 진입. 화력 영 점 삼으로 은은하게 유지하세요." },
+                { sec: 680, temp: 215, fire: "0.0", txt: "⚠️ [2차 크랙 배출] 타다닥 소리가 절정일 때 소화 배출!", talk: "이차 크랙 절정입니다. 타이밍 맞춰 즉시 원두를 배출하세요." }
+            ]
+        }
+    };
+
+    function selectBean(bean) {
+        if(running) return alert("로스팅 중에는 원두를 바꿀 수 없습니다.");
+        currentBean = bean;
+        document.querySelectorAll('.bean-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(`btn-${bean}`).classList.add('active');
+        document.getElementById("tempShow").innerText = profiles[bean].initTemp;
+        renderTimeline();
+    }
+
+    function renderTimeline() {
+        const content = document.getElementById("timelineContent");
+        content.innerHTML = "";
+        profiles[currentBean].steps.forEach(st => {
+            let m = Math.floor(st.sec / 60).toString().padStart(2, '0');
+            let s = (st.sec % 60).toString().padStart(2, '0');
+            content.innerHTML += `<div class="step-item" id="step-${st.sec}">⏱️ [${m}:${s}] (목표:${st.temp}°C) ➡️ 화력 ${st.fire} : ${st.txt}</div>`;
+        });
+    }
+
     function talk(text) {
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
             const msg = new SpeechSynthesisUtterance(text);
             msg.lang = 'ko-KR';
+            msg.rate = isFast ? 1.4 : 1.0; // 배속 시 목소리도 살짝 빠르게 설정
             window.speechSynthesis.speak(msg);
         }
     }
-    const steps = [
-        { sec: 0, temp: 185, fire: "1.6", txt: "[투입 완] 화력을 1.6으로 강하게 올려줍니다.", talk: "생두 투입 완료. 화력을 일 점 육으로 올리세요." },
-        { sec: 60, temp: 85, fire: "1.6", txt: "[터닝 포인트] 통과. 화력 1.6을 그대로 유지합니다.", talk: "터닝 포인트 통과. 화력 일 점 육 유지." },
-        { sec: 300, temp: 150, fire: "1.1", txt: "[옐로우 단계] 화력을 1.1로 낮춥니다.", talk: "옐로우 단계 진입. 화력을 일 점 일로 낮추세요." },
-        { sec: 450, temp: 185, fire: "0.5", txt: "[1차 크랙 임박] 화력을 0.5로 과감하게 줄여줍니다.", talk: "일차 크랙 임박. 화력을 영 점 오로 낮추세요." },
-        { sec: 540, temp: 198, fire: "0.3", txt: "[휴지기 구간] 화력을 0.3으로 미세하게 조절합니다.", talk: "휴지기 진입. 화력을 영 점 삼으로 미세 조절 하세요." },
-        { sec: 630, temp: 213, fire: "0.0", txt: "⚠️ [2차 크랙 발생] 탁탁 소리가 연속으로 나면 즉시 배출!", talk: "이차 크랙 시작. 소리를 확인하고 즉시 원두를 배출하세요." }
-    ];
+
     function goRoast() {
-        if (running) return; running = true; currentSec = 0; triggerStep(0);
-        timer = setInterval(() => { currentSec++; clockUpdate(); triggerStep(currentSec); }, 1000);
+        if (running) return;
+        running = true;
+        currentSec = 0;
+        document.getElementById("startBtn").innerText = "진행 중...";
+        
+        triggerStep(0);
+        runInterval();
     }
+
+    function runInterval() {
+        clearInterval(timer);
+        timer = setInterval(() => {
+            currentSec++;
+            clockUpdate();
+            triggerStep(currentSec);
+        }, isFast ? 100 : 1000); // 10배속일 땐 0.1초마다 1초씩 흐름
+    }
+
+    function toggleSpeed() {
+        isFast = !isFast;
+        document.getElementById("speedShow").style.display = isFast ? "inline-block" : "none";
+        if (running) runInterval();
+    }
+
     function clockUpdate() {
         let m = Math.floor(currentSec / 60), s = currentSec % 60;
-        document.getElementById("timeShow").innerText = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
-        let active = steps.filter(x => x.sec <= currentSec).pop();
-        if(active) { document.getElementById("tempShow").innerText = active.temp + "°C"; document.getElementById("fireShow").innerText = active.fire; }
+        document.getElementById("timeShow").innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        
+        let active = profiles[currentBean].steps.filter(x => x.sec <= currentSec).pop();
+        if(active) {
+            document.getElementById("tempShow").innerText = active.temp + "°C";
+            document.getElementById("fireShow").innerText = active.fire;
+        }
     }
+
     function triggerStep(s) {
-        const match = steps.find(x => x.sec === s);
-        if (match) { document.getElementById("msgShow").innerText = match.txt; talk(match.talk); }
+        const match = profiles[currentBean].steps.find(x => x.sec === s);
+        if (match) {
+            document.getElementById("msgShow").innerText = match.txt;
+            talk(match.talk);
+            
+            // 하단 글 표현 창에서 현재 스텝 강조 표시 바꾸기
+            document.querySelectorAll('.step-item').forEach(el => el.classList.remove('current'));
+            const curEl = document.getElementById(`step-${s}`);
+            if(curEl) curEl.classList.add('current');
+        }
     }
+
+    function stopRoast() {
+        clearInterval(timer);
+        running = false;
+        isFast = false;
+        currentSec = 0;
+        document.getElementById("startBtn").innerText = "로스팅 시작";
+        document.getElementById("speedShow").style.display = "none";
+        document.getElementById("timeShow").innerText = "00:00";
+        document.getElementById("fireShow").innerText = "0.0";
+        document.getElementById("msgShow").innerText = "생두를 선택하고 투입 준비를 해주세요.";
+        window.speechSynthesis.cancel();
+        selectBean(currentBean);
+    }
+
+    // 처음 켰을 때 기본 타임라인 렌더링
+    renderTimeline();
 </script>
+
 </body>
 </html>
